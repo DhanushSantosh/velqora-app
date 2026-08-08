@@ -25,3 +25,8 @@ infra/data
 
 # API Storage
 apps/api/storage
+/.agents
+/.agent-comms/
+
+# Legacy pre-agent-comms memory backup (see docs/legacy-agent-memory)
+/docs/legacy-agent-memory/
