@@ -24,10 +24,35 @@ overrides:
   js-yaml: '>=4.3.1'
   shell-quote: '>=1.9.0'
   '@opentelemetry/core': '>=2.8.0'
-  '@babel/core': '>=7.29.6'
+  # Pinned exactly (not a floor) -- an unbounded '>=7.29.6' floor let pnpm
+  # resolve the newly-released Babel 8 major, which broke Expo/React
+  # Native's babel plugin ecosystem (all still on Babel 7). Same class of
+  # bug as the vitest override below.
+  '@babel/core': '7.29.7'
   'vitest@<3.2.6': '3.2.6'
   nanoid: '>=3.3.17'
   # image-size <=2.0.2 (nested under expo>@expo/metro>metro) has no patched
   # release yet upstream (GHSA-w3rx-r6r6-pgpr, GHSA-5p2g-fcmc-qvqq). Build-time
   # asset parser only, not reachable by untrusted network input -- monitor for
   # an upstream fix rather than pinning to a version that doesn't exist.
+
+packageExtensions:
+  # These packages all declare peerDependencies["@babel/core"] as a bare "*".
+  # pnpm's peer auto-install resolves wildcard peers against the registry's
+  # `latest` dist-tag independent of the `overrides` table above, so it kept
+  # pulling in the newly-released Babel 8 major and breaking the Expo/React
+  # Native babel toolchain (all still on Babel 7). Narrowing the peer range
+  # on each of them keeps resolution inside the 7.x major that's actually
+  # installed.
+  react-native-worklets:
+    peerDependencies:
+      '@babel/core': '^7.25.2'
+  '@react-native/babel-preset':
+    peerDependencies:
+      '@babel/core': '^7.25.2'
+  '@react-native/codegen':
+    peerDependencies:
+      '@babel/core': '^7.25.2'
+  '@react-native/metro-babel-transformer':
+    peerDependencies:
+      '@babel/core': '^7.25.2'
