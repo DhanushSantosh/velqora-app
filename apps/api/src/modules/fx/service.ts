@@ -5,6 +5,7 @@ import { AppError } from "../../errors.js";
 const ecbDailyRatesUrl = "https://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml";
 const cacheKey = "fx:ecb:daily";
 const cacheTtlSeconds = 60 * 60 * 6;
+const fetchTimeoutMs = 10_000;
 
 const testSnapshot = {
   provider: "ecb",
@@ -86,6 +87,26 @@ const readRedisCache = async (redis: Redis | null): Promise<ExchangeRateSnapshot
   }
 };
 
+const readStaleRedisCache = async (redis: Redis | null): Promise<ExchangeRateSnapshot | null> => {
+  if (!redis) {
+    return null;
+  }
+
+  try {
+    const raw = await redis.get(cacheKey);
+    if (!raw) {
+      return null;
+    }
+
+    return (JSON.parse(raw) as CacheRecord).snapshot;
+  } catch {
+    return null;
+  }
+};
+
+const readStaleCache = async (redis: Redis | null): Promise<ExchangeRateSnapshot | null> =>
+  inMemoryCache?.snapshot ?? (await readStaleRedisCache(redis));
+
 const writeRedisCache = async (redis: Redis | null, snapshot: ExchangeRateSnapshot): Promise<void> => {
   const record: CacheRecord = {
     snapshot,
@@ -108,6 +129,8 @@ export const getExchangeRateSnapshot = async (input: {
   redis: Redis | null;
   logger: FastifyBaseLogger;
   nodeEnv: "development" | "test" | "production";
+  fetchFn?: typeof fetch;
+  fetchTimeoutMs?: number;
 }): Promise<ExchangeRateSnapshot> => {
   if (input.nodeEnv === "test") {
     return testSnapshot;
@@ -122,22 +145,37 @@ export const getExchangeRateSnapshot = async (input: {
     return cachedSnapshot;
   }
 
-  const response = await fetch(ecbDailyRatesUrl, {
-    method: "GET",
-    headers: {
-      accept: "application/xml,text/xml"
-    }
-  });
+  try {
+    const response = await (input.fetchFn ?? fetch)(ecbDailyRatesUrl, {
+      method: "GET",
+      headers: {
+        accept: "application/xml,text/xml"
+      },
+      signal: AbortSignal.timeout(input.fetchTimeoutMs ?? fetchTimeoutMs)
+    });
 
-  if (!response.ok) {
-    input.logger.warn({ statusCode: response.status }, "ECB FX feed request failed.");
+    if (!response.ok) {
+      input.logger.warn({ statusCode: response.status }, "ECB FX feed request failed.");
+      throw new AppError(502, "FX_UNAVAILABLE", "Exchange rates are unavailable right now.");
+    }
+
+    const xml = await response.text();
+    const snapshot = parseEcbRatesXml(xml);
+    await writeRedisCache(input.redis, snapshot);
+    return snapshot;
+  } catch (error) {
+    const staleSnapshot = await readStaleCache(input.redis);
+    if (staleSnapshot) {
+      input.logger.warn({ error }, "ECB FX feed unavailable; serving stale exchange rates.");
+      return staleSnapshot;
+    }
+
+    if (error instanceof AppError) {
+      throw error;
+    }
+
     throw new AppError(502, "FX_UNAVAILABLE", "Exchange rates are unavailable right now.");
   }
-
-  const xml = await response.text();
-  const snapshot = parseEcbRatesXml(xml);
-  await writeRedisCache(input.redis, snapshot);
-  return snapshot;
 };
 
 export const convertAmount = (
