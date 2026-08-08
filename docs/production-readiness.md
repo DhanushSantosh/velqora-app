@@ -87,7 +87,7 @@ Production smoke should be deliberately smaller than staging:
 
 1. Verify `/health` is healthy.
 2. Verify OTP request succeeds against the real provider.
-3. Verify login works on a real mobile build or Expo Go against production API only if allowed by release policy.
+3. Verify login works on a real mobile build or dev client against production API only if allowed by release policy.
 4. Verify one low-risk authenticated read path.
 5. Avoid mutation-heavy smoke on production unless the team has explicit seed/test-account policy.
 

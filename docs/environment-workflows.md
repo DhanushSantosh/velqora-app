@@ -21,7 +21,7 @@ This is the main daily coding loop.
 
 - local Postgres and Redis via Docker
 - local Fastify API in watch mode
-- Expo Go for mobile development
+- a custom dev client for mobile development (native modules like Google Sign-In aren't available in plain Expo Go)
 
 ### Main commands
 
@@ -41,11 +41,11 @@ pnpm dev:mobile
 - `pnpm dev` runs the standard local workflow:
   - starts Postgres + Redis
   - starts the API in watch mode
-  - launches Expo Go locally
+  - launches the dev client locally
 - `pnpm dev:tailscale` runs the cross-network phone workflow:
   - starts Postgres + Redis
   - starts the API in watch mode
-  - launches Expo Go in LAN mode
+  - launches the dev client in LAN mode
   - injects the machine's Tailscale IP into both Metro and the mobile API base URL
 - `pnpm dev:local` is the explicit alias for the same local API + Expo workflow
 - `pnpm dev:android` is the emulator-focused version
@@ -99,8 +99,8 @@ pnpm dev:staging
 
 ### How it works in practice
 
-- `pnpm dev:staging` launches Expo Go locally while pointing the app at the hosted staging backend
-- `pnpm dev:staging:tailscale` launches Expo Go over Tailscale while pointing the app at the hosted staging backend
+- `pnpm dev:staging` launches the dev client locally while pointing the app at the hosted staging backend
+- `pnpm dev:staging:tailscale` launches the dev client over Tailscale while pointing the app at the hosted staging backend
 - no local API, Postgres, or Redis are required for this workflow
 - OTP is delivered by the real Resend staging configuration
 - this is the fastest way to validate the mobile app against a production-like backend without touching local infrastructure

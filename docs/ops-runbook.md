@@ -133,7 +133,7 @@ Restart Expo after update.
 
 1. Make sure both laptop and phone are connected to the same Tailnet.
 2. Run `pnpm dev`.
-3. Scan the Expo QR in Expo Go.
+3. Scan the QR with your installed dev client build (not Expo Go).
 
 `pnpm dev` now uses this machine's Tailscale IPv4 for both Metro and the API.
 

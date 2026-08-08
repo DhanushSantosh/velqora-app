@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# dev-tailscale.sh — local API + Expo Go via Tailscale
+# dev-tailscale.sh — local API + dev client via Tailscale
 #
 # Usage: pnpm dev
 #
@@ -58,13 +58,13 @@ wait_for_http_ready "http://127.0.0.1:4000/health" "local API"
 
 echo ""
 echo "Phone access:"
-echo "  Expo Go QR will target : exp://$TAILSCALE_IP:8081"
-echo "  API base URL           : http://$TAILSCALE_IP:4000"
+echo "  Dev client QR will target : exp://$TAILSCALE_IP:8081"
+echo "  API base URL              : http://$TAILSCALE_IP:4000"
 echo ""
-echo "Make sure your phone is connected to the same Tailnet, then scan the Expo QR in Expo Go."
+echo "Make sure your phone is connected to the same Tailnet, then scan the QR with your installed dev client build (not Expo Go)."
 echo ""
 
 EXPO_PUBLIC_API_URL="http://$TAILSCALE_IP:4000" \
 REACT_NATIVE_PACKAGER_HOSTNAME="$TAILSCALE_IP" \
 EXPO_NO_REDIRECT_PAGE=1 \
-  pnpm --filter @velqora/mobile exec expo start --lan --go
+  pnpm --filter @velqora/mobile exec expo start --lan --dev-client

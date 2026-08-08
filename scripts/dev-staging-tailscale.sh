@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# dev-staging-tailscale.sh — Expo Go against hosted staging API over Tailscale
+# dev-staging-tailscale.sh — dev client against hosted staging API over Tailscale
 #
 # Usage: pnpm dev:staging
 #
@@ -25,14 +25,14 @@ fi
 echo "Using Tailscale IP: $TAILSCALE_IP"
 echo ""
 echo "Hosted staging access:"
-echo "  Expo Go QR will target : exp://$TAILSCALE_IP:8081"
-echo "  API base URL           : $STAGING_API_URL"
+echo "  Dev client QR will target : exp://$TAILSCALE_IP:8081"
+echo "  API base URL              : $STAGING_API_URL"
 echo ""
-echo "Make sure your phone is connected to the same Tailnet, then scan the Expo QR in Expo Go."
+echo "Make sure your phone is connected to the same Tailnet, then scan the QR with your installed dev client build (not Expo Go)."
 echo ""
 
 EXPO_PUBLIC_API_URL="$STAGING_API_URL" \
 EXPO_PUBLIC_SENTRY_ENVIRONMENT=staging \
 REACT_NATIVE_PACKAGER_HOSTNAME="$TAILSCALE_IP" \
 EXPO_NO_REDIRECT_PAGE=1 \
-  pnpm --filter @velqora/mobile exec expo start --lan --go
+  pnpm --filter @velqora/mobile exec expo start --lan --dev-client

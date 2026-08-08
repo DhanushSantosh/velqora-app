@@ -21,7 +21,7 @@ This is no longer a fragile prototype. The main work ahead is product completion
 - Branch health: clean working tree expected on `main`
 - Package manager: `pnpm` workspaces
 - Recent maintenance:
-  - Tailscale-based Expo Go workflow is the default real-phone path
+  - Tailscale-based dev client workflow is the default real-phone path
   - dependency advisories were patched and verified
   - security remediation pass is merged and verified
 
@@ -86,7 +86,7 @@ Latest validated results:
 ## What Is Stable
 
 - Local API and mobile development loop
-- Real-phone testing over Tailscale + Expo Go
+- Real-phone testing over Tailscale + dev client
 - Core finance record CRUD flows
 - Budget and goal tracking flows
 - Profile and regional preference handling

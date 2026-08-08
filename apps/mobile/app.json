@@ -7,11 +7,6 @@
     "orientation": "portrait",
     "userInterfaceStyle": "dark",
     "icon": "./assets/icon.png",
-    "splash": {
-      "image": "./assets/splash-icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#000000"
-    },
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.velqora.finance",
@@ -51,7 +46,17 @@
           "iosUrlScheme": "com.googleusercontent.apps.545086023738-aq7dbgn1j0k39e7sftksihvs6b2si4q7"
         }
       ],
-      "expo-secure-store"
+      "expo-secure-store",
+      "expo-status-bar",
+      "expo-web-browser",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "resizeMode": "contain",
+          "backgroundColor": "#000000"
+        }
+      ]
     ],
     "extra": {
       "eas": {

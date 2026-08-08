@@ -40,7 +40,7 @@ velqora-app/
 | API | Fastify v5, Node.js ≥22, TypeScript, Zod |
 | DB | Drizzle ORM, PostgreSQL 16+ |
 | Cache / rate-limit | Redis (ioredis), in-memory fallback |
-| Mobile | Expo ~55, React Native 0.83, React 19 |
+| Mobile | Expo ~57, React Native 0.86, React 19 |
 | Animations | react-native-reanimated 4 |
 | Package manager | pnpm 10 (workspaces) |
 | Tests | Vitest (API + mobile) |
@@ -75,11 +75,19 @@ pnpm --filter @velqora/api db:migrate
 pnpm dev:android    # recommended — starts API + boots Android emulator + Expo
 pnpm dev:api        # API only (hot-reload)
 pnpm android:fast   # emulator + Expo Android
-pnpm dev            # default local workflow — local API + Expo Go
-pnpm dev:tailscale  # local API + Expo Go over Tailscale
-pnpm dev:staging    # Expo Go against hosted staging API (same network / simulator friendly)
-pnpm dev:staging:tailscale  # Expo Go against hosted staging API over Tailscale
+pnpm dev            # default local workflow — local API + dev client
+pnpm dev:tailscale  # local API + dev client over Tailscale
+pnpm dev:staging    # dev client against hosted staging API (same network / simulator friendly)
+pnpm dev:staging:tailscale  # dev client against hosted staging API over Tailscale
 ```
+
+This app uses custom native modules (e.g. `@react-native-google-signin/google-signin`) that plain Expo Go can't load, so all of the above run against a **custom dev client**, not the Expo Go app from the store. Build and install the dev client on your device/emulator once before your first run:
+
+```bash
+pnpm --filter @velqora/mobile exec npx expo run:android   # or run:ios on macOS
+```
+
+Re-run that (or `expo prebuild` + a native rebuild) whenever you pull a native module change — everyday `pnpm dev`/`dev:android` after that just needs Metro, since the dev client binary itself is unchanged.
 
 The local dev scripts automatically start and wait for the database containers before launching the API.
 
@@ -87,7 +95,7 @@ For real-device testing on any network, use the explicit Tailscale workflow:
 
 - `pnpm dev:tailscale` detects this machine's Tailscale IPv4
 - the API is exposed at `http://<tailscale-ip>:4000`
-- Expo Go runs in LAN mode with `REACT_NATIVE_PACKAGER_HOSTNAME=<tailscale-ip>`
+- the dev client runs in LAN mode with `REACT_NATIVE_PACKAGER_HOSTNAME=<tailscale-ip>`
 - your phone can connect from any network as long as both devices are on the same Tailnet
 
 If you pull native module updates (for example image picker/document picker), restart Metro and rebuild the app binary once:
@@ -102,7 +110,7 @@ For hosted staging testing, use:
 pnpm dev:staging
 ```
 
-This starts Expo Go locally and points the mobile app at:
+This starts the dev client locally and points the mobile app at:
 
 - `https://velqora-api-staging.onrender.com`
 
