@@ -242,4 +242,36 @@ describe("auth recovery OTP", () => {
     const errorJson = secondVerify.json() as { error: { code: string } };
     expect(errorJson.error.code).toBe("INVALID_OTP");
   });
+
+  it("invalidates an older OTP when a newer OTP is requested", async () => {
+    const email = `otp-replaced-${randomUUID()}@example.com`;
+
+    const firstRequest = await app.inject({
+      method: "POST",
+      url: "/api/v1/auth/request-otp",
+      payload: { email }
+    });
+    const firstCode = (firstRequest.json() as { debugOtpCode: string }).debugOtpCode;
+
+    const secondRequest = await app.inject({
+      method: "POST",
+      url: "/api/v1/auth/request-otp",
+      payload: { email }
+    });
+    const secondCode = (secondRequest.json() as { debugOtpCode: string }).debugOtpCode;
+
+    const oldCodeVerification = await app.inject({
+      method: "POST",
+      url: "/api/v1/auth/verify-otp",
+      payload: { email, code: firstCode }
+    });
+    expect(oldCodeVerification.statusCode).toBe(401);
+
+    const currentCodeVerification = await app.inject({
+      method: "POST",
+      url: "/api/v1/auth/verify-otp",
+      payload: { email, code: secondCode }
+    });
+    expect(currentCodeVerification.statusCode).toBe(200);
+  });
 });

@@ -125,6 +125,13 @@ export class AuthService {
     const codeHash = this.hashOtp(email, otpCode);
     const expiresAt = calculateOtpExpiry(new Date(), this.deps.env.AUTH_OTP_TTL_SECONDS);
 
+    // Only the most recently requested code may be used. Without this, an
+    // earlier unexpired OTP becomes valid again after a newer OTP is consumed.
+    await this.deps.db
+      .update(authOtps)
+      .set({ usedAt: new Date() })
+      .where(and(eq(authOtps.email, email), isNull(authOtps.usedAt)));
+
     const insertedOtp = (
       await this.deps.db
         .insert(authOtps)
