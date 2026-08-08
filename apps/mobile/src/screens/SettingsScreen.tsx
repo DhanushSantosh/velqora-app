@@ -3,7 +3,7 @@ import { Alert, Switch, Text, View, Image } from "react-native";
 import { APP_BUILD_LABEL } from "../appMetadata";
 import { AppHeader, Button, Card, InlineMessage, publishToast, Screen, SelectField } from "../components/ui";
 import { createStyles, theme } from "../theme";
-import { ShieldAlert, ShieldCheck, LogOut, TerminalSquare, FolderTree, User, SlidersHorizontal } from "lucide-react-native";
+import { ShieldAlert, ShieldCheck, LogOut, TerminalSquare, FolderTree, User, SlidersHorizontal, Wallet } from "lucide-react-native";
 import { UserProfile } from "../types";
 import { currencyOptions } from "../utils/regionalOptions";
 
@@ -14,6 +14,7 @@ type SettingsScreenProps = {
   onOpenProfile: () => void;
   onRequestEnable: (enabled: boolean) => Promise<void>;
   onOpenCategoryManager: () => void;
+  onOpenNetWorth: () => void;
   onSaveProfileSettings: (settings: UserProfile["settings"]) => Promise<void>;
   onChangeDisplayCurrency: (currency: string) => Promise<void>;
   onDeleteAccount: () => Promise<void>;
@@ -27,6 +28,7 @@ export const SettingsScreen = ({
   onOpenProfile,
   onRequestEnable,
   onOpenCategoryManager,
+  onOpenNetWorth,
   onSaveProfileSettings,
   onChangeDisplayCurrency,
   onDeleteAccount,
@@ -283,6 +285,17 @@ export const SettingsScreen = ({
           <Text style={styles.sectionSubtitle}>Create and maintain your custom categories.</Text>
         </View>
         <Button label="MANAGE CATEGORIES" variant="secondary" onPress={onOpenCategoryManager} />
+      </Card>
+
+      <Card variant="glass" style={styles.sectionCard}>
+        <View style={styles.sectionHeader}>
+          <View style={styles.titleRow}>
+            <Wallet size={18} color={theme.color.textMuted} />
+            <Text style={styles.sectionTitle}>NET WORTH</Text>
+          </View>
+          <Text style={styles.sectionSubtitle}>Track assets, liabilities, and what you're really worth.</Text>
+        </View>
+        <Button label="VIEW NET WORTH" variant="secondary" onPress={onOpenNetWorth} />
       </Card>
 
       <Card variant="glass" style={styles.sectionCard}>

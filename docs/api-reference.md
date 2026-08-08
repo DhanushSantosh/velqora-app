@@ -43,7 +43,7 @@ Behavior:
 - If a keyed request is still processing, API returns:
   - `409 IDEMPOTENCY_IN_PROGRESS`
 
-Coverage: transactions, budgets, goals, categories (create/update/delete), SMS-import consent intent, profile patch, and avatar delete. Auth routes and avatar **upload** are not idempotency-key covered.
+Coverage: transactions, budgets, goals, net worth accounts, categories (create/update/delete), SMS-import consent intent, profile patch, and avatar delete. Auth routes and avatar **upload** are not idempotency-key covered.
 
 ## Health and Bootstrap
 
@@ -481,6 +481,74 @@ Requires auth. Partial update accepted.
 ### `DELETE /api/v1/goals/:id`
 
 Requires auth. Deletes only if owned by authenticated user.
+
+## Net Worth
+
+Manual asset/liability tracking — no bank/UPI sync behind this yet, all balances are user-entered.
+
+### `GET /api/v1/net-worth`
+
+Requires auth.
+
+Returns active (non-archived) accounts plus a summary converted into the authenticated user's profile currency:
+
+```json
+{
+  "accounts": [
+    {
+      "id": "...",
+      "name": "HDFC Savings",
+      "accountType": "asset",
+      "subtype": "bank",
+      "balance": 50000,
+      "currency": "INR",
+      "notes": null,
+      "baseCurrencyBalance": 50000,
+      "conversionFallback": false,
+      "archivedAt": null,
+      "createdAt": "...",
+      "updatedAt": "..."
+    }
+  ],
+  "summary": {
+    "totalAssets": 50000,
+    "totalLiabilities": 12000,
+    "netWorth": 38000,
+    "currency": "INR",
+    "asOf": "2026-08-08T20:50:00.000Z",
+    "hasConversionFallback": false
+  }
+}
+```
+
+`conversionFallback` is `true` on an account (and `hasConversionFallback` on the summary) when that account's currency couldn't be converted against the current FX snapshot — its raw balance is used in the totals instead of silently dropping it.
+
+### `POST /api/v1/net-worth/accounts`
+
+Requires auth. Idempotency-key supported.
+
+Request body:
+
+```json
+{
+  "name": "HDFC Savings",
+  "accountType": "asset",
+  "subtype": "bank",
+  "balance": 50000,
+  "currency": "INR",
+  "notes": "Primary account"
+}
+```
+
+`accountType` is `asset` or `liability`. `subtype` is free-form (UI suggests `bank`/`cash`/`investment`/`property`/`vehicle`/`other_asset` for assets and `credit_card`/`loan`/`other_liability` for liabilities). `currency` and `notes` are optional; `currency` defaults to the profile currency.
+
+### `PATCH /api/v1/net-worth/accounts/:id`
+
+Requires auth. Idempotency-key supported. Partial update accepted; only succeeds against a non-archived account owned by the authenticated user.
+
+### `DELETE /api/v1/net-worth/accounts/:id`
+
+Requires auth. Idempotency-key supported. Soft-deletes (sets `archivedAt`) rather than hard-deleting; archived accounts are excluded from `GET /api/v1/net-worth`.
 
 ## SMS Consent Guardrail
 

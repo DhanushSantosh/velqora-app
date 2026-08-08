@@ -9,6 +9,8 @@ export type ModalRoute =
   | { kind: "transactionForm"; mode: "create" | "edit" }
   | { kind: "budgetForm"; mode: "create" | "edit" }
   | { kind: "goalForm"; mode: "create" | "edit" }
+  | { kind: "netWorth" }
+  | { kind: "netWorthForm"; mode: "create" | "edit" }
   | { kind: "profile" };
 
 export type TabSpec = {

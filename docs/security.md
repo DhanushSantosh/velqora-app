@@ -64,6 +64,9 @@ Audit events are captured for all security and mutation actions via `AuditServic
 | `goal.create` | Savings goal created |
 | `goal.update` | Savings goal updated |
 | `goal.delete` | Savings goal deleted |
+| `net_worth.account.create` | Net worth account created |
+| `net_worth.account.update` | Net worth account updated |
+| `net_worth.account.delete` | Net worth account archived (soft-deleted) |
 | `profile.update` | Profile fields/settings patched |
 | `profile.avatar_upload` | Avatar uploaded |
 | `profile.avatar_remove` | Avatar removed |

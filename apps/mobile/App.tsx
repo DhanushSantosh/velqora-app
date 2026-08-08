@@ -18,6 +18,8 @@ import { DashboardScreen } from "./src/screens/DashboardScreen";
 import { GoalFormScreen } from "./src/screens/GoalFormScreen";
 import { GoalsScreen } from "./src/screens/GoalsScreen";
 import { LoginScreen } from "./src/screens/LoginScreen";
+import { NetWorthFormScreen } from "./src/screens/NetWorthFormScreen";
+import { NetWorthScreen } from "./src/screens/NetWorthScreen";
 import { OtpVerifyScreen } from "./src/screens/OtpVerifyScreen";
 import { ProfileScreen } from "./src/screens/ProfileScreen";
 import { SettingsScreen } from "./src/screens/SettingsScreen";
@@ -30,6 +32,8 @@ import {
   Category,
   ExchangeRateSnapshot,
   Goal,
+  NetWorthAccount,
+  NetWorthOverview,
   ReportSummary,
   Transaction,
   TransactionListQuery,
@@ -165,6 +169,7 @@ export default function App() {
   const [budgets, setBudgets] = useState<Budget[]>([]);
   const [budgetTotals, setBudgetTotals] = useState(emptyBudgetTotals);
   const [goals, setGoals] = useState<Goal[]>([]);
+  const [netWorth, setNetWorth] = useState<NetWorthOverview | null>(null);
   const [reportSummary, setReportSummary] = useState<ReportSummary | null>(null);
   const [exchangeRates, setExchangeRates] = useState<ExchangeRateSnapshot | null>(null);
   const [reportMonth, setReportMonth] = useState(getCurrentMonthToken());
@@ -177,6 +182,7 @@ export default function App() {
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [editingBudget, setEditingBudget] = useState<Budget | null>(null);
   const [editingGoal, setEditingGoal] = useState<Goal | null>(null);
+  const [editingNetWorthAccount, setEditingNetWorthAccount] = useState<NetWorthAccount | null>(null);
   const syncInFlightRef = useRef(false);
   const syncQueuedRef = useRef(false);
   const syncTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -257,6 +263,17 @@ export default function App() {
 
       if (modalRoute.kind === "goalForm") {
         setEditingGoal(null);
+        setModalRoute(emptyModalRoute);
+        return true;
+      }
+
+      if (modalRoute.kind === "netWorthForm") {
+        setEditingNetWorthAccount(null);
+        setModalRoute({ kind: "netWorth" });
+        return true;
+      }
+
+      if (modalRoute.kind === "netWorth") {
         setModalRoute(emptyModalRoute);
         return true;
       }
@@ -350,11 +367,12 @@ export default function App() {
       try {
         const profileData = await apiClient.getProfile(sessionToken);
         const displayCurrency = resolveRegionalPreferences(profileData, bootstrap).currency;
-        const [categoryItems, transactionData, budgetData, goalItems, reportData, rateSnapshot] = await Promise.all([
+        const [categoryItems, transactionData, budgetData, goalItems, netWorthData, reportData, rateSnapshot] = await Promise.all([
           apiClient.getCategories(sessionToken),
           apiClient.getTransactions(sessionToken, buildTransactionQuery(transactionFilters, 1)),
           apiClient.getBudgets(sessionToken, budgetMonth),
           apiClient.getGoals(sessionToken),
+          apiClient.getNetWorth(sessionToken, displayCurrency),
           apiClient.getReportSummary(sessionToken, reportMonth, displayCurrency),
           apiClient.getExchangeRates(sessionToken, displayCurrency)
         ]);
@@ -369,6 +387,7 @@ export default function App() {
         setBudgets(budgetData.items);
         setBudgetTotals(budgetData.totals);
         setGoals(goalItems);
+        setNetWorth(netWorthData);
         setReportSummary(reportData);
         setProfile(profileData);
         setExchangeRates(rateSnapshot);
@@ -413,8 +432,9 @@ export default function App() {
     ]);
     const monthToken = getCurrentMonthToken(profileData.timezone);
     const displayCurrency = resolveRegionalPreferences(profileData, bootstrapPayload).currency;
-    const [budgetData, reportData, rateSnapshot] = await Promise.all([
+    const [budgetData, netWorthData, reportData, rateSnapshot] = await Promise.all([
       apiClient.getBudgets(sessionToken, monthToken),
+      apiClient.getNetWorth(sessionToken, displayCurrency),
       apiClient.getReportSummary(sessionToken, monthToken, displayCurrency),
       apiClient.getExchangeRates(sessionToken, displayCurrency)
     ]);
@@ -430,6 +450,7 @@ export default function App() {
     setBudgetTotals(budgetData.totals);
     setBudgetMonth(budgetData.month);
     setGoals(goalItems);
+    setNetWorth(netWorthData);
     setReportSummary(reportData);
     setExchangeRates(rateSnapshot);
     setReportMonth(reportData.month);
@@ -1025,6 +1046,69 @@ export default function App() {
     ]);
   };
 
+  const handleSaveNetWorthAccount = async (payload: {
+    name: string;
+    accountType: "asset" | "liability";
+    subtype: string;
+    balance: number;
+    currency: string;
+    notes: string | null;
+  }) => {
+    if (!token) return;
+
+    if (modalRoute.kind === "netWorthForm" && modalRoute.mode === "edit" && editingNetWorthAccount) {
+      await apiClient.updateNetWorthAccount(token, editingNetWorthAccount.id, payload);
+    } else {
+      await apiClient.createNetWorthAccount(token, payload);
+    }
+
+    const displayCurrency = regionalPreferences.currency;
+    const refreshedNetWorth = await apiClient.getNetWorth(token, displayCurrency);
+    setNetWorth(refreshedNetWorth);
+
+    setEditingNetWorthAccount(null);
+    setModalRoute({ kind: "netWorth" });
+    enqueueReconcileSync(token);
+    publishToast({
+      tone: "success",
+      title: "Net Worth",
+      message: modalRoute.kind === "netWorthForm" && modalRoute.mode === "edit" ? "Account updated." : "Account added."
+    });
+  };
+
+  const handleDeleteNetWorthAccount = async (account: NetWorthAccount) => {
+    if (!token) return;
+
+    Alert.alert("Remove account", `Remove "${account.name}" from net worth tracking?`, [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Remove",
+        style: "destructive",
+        onPress: () => {
+          void (async () => {
+            try {
+              await apiClient.deleteNetWorthAccount(token, account.id);
+              const refreshedNetWorth = await apiClient.getNetWorth(token, regionalPreferences.currency);
+              setNetWorth(refreshedNetWorth);
+              enqueueReconcileSync(token);
+              publishToast({
+                tone: "success",
+                title: "Net Worth",
+                message: "Account removed."
+              });
+            } catch (error) {
+              publishToast({
+                tone: "error",
+                title: "Unable to remove account",
+                message: resolveErrorMessage(error, "Please try again.")
+              });
+            }
+          })();
+        }
+      }
+    ]);
+  };
+
   const handleSaveProfile = async (payload: Partial<{
     firstName: string;
     lastName: string;
@@ -1073,14 +1157,16 @@ export default function App() {
 
     const updatedProfile = await apiClient.updateProfile(token, { currency });
     const displayCurrency = resolveRegionalPreferences(updatedProfile, bootstrap).currency;
-    const [summary, rateSnapshot] = await Promise.all([
+    const [summary, rateSnapshot, netWorthData] = await Promise.all([
       apiClient.getReportSummary(token, reportMonth, displayCurrency),
-      apiClient.getExchangeRates(token, displayCurrency)
+      apiClient.getExchangeRates(token, displayCurrency),
+      apiClient.getNetWorth(token, displayCurrency)
     ]);
 
     setProfile(updatedProfile);
     setReportSummary(summary);
     setExchangeRates(rateSnapshot);
+    setNetWorth(netWorthData);
     enqueueReconcileSync(token);
   };
 
@@ -1127,6 +1213,7 @@ export default function App() {
     setTransactionPagination(emptyTransactionPagination);
     setBudgets([]);
     setGoals([]);
+    setNetWorth(null);
     setReportSummary(null);
     setExchangeRates(null);
     setReportMonth(getCurrentMonthToken());
@@ -1138,6 +1225,7 @@ export default function App() {
     setEditingCategory(null);
     setEditingBudget(null);
     setEditingGoal(null);
+    setEditingNetWorthAccount(null);
   };
 
   const handleSignOut = async () => {
@@ -1275,6 +1363,42 @@ export default function App() {
       );
     }
 
+    if (modalRoute.kind === "netWorthForm") {
+      return (
+        <NetWorthFormScreen
+          initial={modalRoute.mode === "edit" ? editingNetWorthAccount : null}
+          defaultCurrency={regionalPreferences.currency}
+          onCancel={() => {
+            setEditingNetWorthAccount(null);
+            setModalRoute({ kind: "netWorth" });
+          }}
+          onSubmit={handleSaveNetWorthAccount}
+        />
+      );
+    }
+
+    if (modalRoute.kind === "netWorth") {
+      return (
+        <NetWorthScreen
+          overview={netWorth}
+          exchangeRates={exchangeRates}
+          regionalPreferences={regionalPreferences}
+          refreshing={refreshing}
+          onRefresh={refreshAll}
+          onBack={() => setModalRoute(emptyModalRoute)}
+          onAdd={() => {
+            setEditingNetWorthAccount(null);
+            setModalRoute({ kind: "netWorthForm", mode: "create" });
+          }}
+          onEdit={(account) => {
+            setEditingNetWorthAccount(account);
+            setModalRoute({ kind: "netWorthForm", mode: "edit" });
+          }}
+          onDelete={handleDeleteNetWorthAccount}
+        />
+      );
+    }
+
     if (modalRoute.kind === "profile") {
       if (!profile) {
         return (
@@ -1402,6 +1526,9 @@ export default function App() {
         onRequestEnable={handleSmsIntent}
         onOpenCategoryManager={() => {
           setModalRoute({ kind: "categoryManager" });
+        }}
+        onOpenNetWorth={() => {
+          setModalRoute({ kind: "netWorth" });
         }}
         onSaveProfileSettings={handleSaveProfileSettings}
         onChangeDisplayCurrency={handleChangeDisplayCurrency}

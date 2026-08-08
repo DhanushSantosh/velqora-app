@@ -5,6 +5,9 @@ import {
   Category,
   ExchangeRateSnapshot,
   Goal,
+  NetWorthAccount,
+  NetWorthAccountType,
+  NetWorthOverview,
   ProfileSettings,
   ReportSummary,
   Transaction,
@@ -481,6 +484,45 @@ export const apiClient = {
 
   async deleteGoal(token: string, goalId: string): Promise<void> {
     await request<{ success: boolean }>(`/api/v1/goals/${goalId}`, {
+      method: "DELETE",
+      token
+    });
+  },
+
+  async getNetWorth(token: string, currency?: string): Promise<NetWorthOverview> {
+    const query = currency ? `?currency=${encodeURIComponent(currency)}` : "";
+    return request<NetWorthOverview>(`/api/v1/net-worth${query}`, {
+      token
+    });
+  },
+
+  async createNetWorthAccount(
+    token: string,
+    payload: { name: string; accountType: NetWorthAccountType; subtype: string; balance: number; currency: string; notes?: string | null }
+  ): Promise<NetWorthAccount> {
+    const result = await request<{ item: NetWorthAccount }>("/api/v1/net-worth/accounts", {
+      method: "POST",
+      token,
+      body: payload
+    });
+    return result.item;
+  },
+
+  async updateNetWorthAccount(
+    token: string,
+    accountId: string,
+    payload: Partial<{ name: string; accountType: NetWorthAccountType; subtype: string; balance: number; currency: string; notes: string | null }>
+  ): Promise<NetWorthAccount> {
+    const result = await request<{ item: NetWorthAccount }>(`/api/v1/net-worth/accounts/${accountId}`, {
+      method: "PATCH",
+      token,
+      body: payload
+    });
+    return result.item;
+  },
+
+  async deleteNetWorthAccount(token: string, accountId: string): Promise<void> {
+    await request<{ success: boolean }>(`/api/v1/net-worth/accounts/${accountId}`, {
       method: "DELETE",
       token
     });

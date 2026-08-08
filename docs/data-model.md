@@ -8,6 +8,7 @@ ORM: Drizzle (`apps/api/src/db/schema.ts`)
 
 - `transaction_direction`: `debit`, `credit`, `transfer`
 - `transaction_source`: `manual`, `sms_import`, `statement_import`
+- `net_worth_account_type`: `asset`, `liability`
 
 ## Tables
 
@@ -104,6 +105,25 @@ Indexes and constraints:
 Indexes:
 
 - Index: `(user_id, updated_at)`
+
+### `net_worth_accounts`
+
+- `id` (uuid, pk)
+- `user_id` -> `users.id`
+- `name`
+- `account_type` (`asset`, `liability`)
+- `subtype` — free-form (e.g. `bank`, `cash`, `investment`, `property`, `vehicle`, `other_asset`, `credit_card`, `loan`, `other_liability`); kept as text rather than an enum since new subtypes are a UI/product concern, not a schema migration
+- `balance` (numeric 14,2) — always non-negative; sign is implied by `account_type`
+- `currency` (3-char)
+- `notes` nullable
+- `archived_at` nullable — soft-delete; archived accounts are excluded from the default list/summary
+- `created_at`, `updated_at`
+
+Indexes:
+
+- Index: `(user_id, updated_at)`
+
+Manual balance tracking only — there is no bank/UPI sync behind this table yet. Account Aggregator integration remains a future roadmap item.
 
 ### `consents`
 

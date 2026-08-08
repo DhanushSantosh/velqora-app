@@ -18,6 +18,7 @@ import {
 export const transactionDirectionEnum = pgEnum("transaction_direction", ["debit", "credit", "transfer"]);
 export const transactionSourceEnum = pgEnum("transaction_source", ["manual", "sms_import", "statement_import"]);
 export const authProviderEnum = pgEnum("auth_provider", ["otp", "google", "apple", "merged"]);
+export const netWorthAccountTypeEnum = pgEnum("net_worth_account_type", ["asset", "liability"]);
 
 export const users = pgTable(
   "users",
@@ -225,6 +226,32 @@ export const savingsGoals = pgTable(
   },
   (table) => ({
     savingsGoalsUserIndex: index("savings_goals_user_idx").on(table.userId, table.updatedAt)
+  })
+);
+
+export const netWorthAccounts = pgTable(
+  "net_worth_accounts",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    name: varchar("name", { length: 120 }).notNull(),
+    accountType: netWorthAccountTypeEnum("account_type").notNull(),
+    // Free-form subtype for grouping in the UI (e.g. "bank", "cash", "investment",
+    // "property", "vehicle", "other_asset", "credit_card", "loan", "other_liability").
+    // Kept as text rather than an enum since new subtypes are a UI/product concern,
+    // not a schema migration.
+    subtype: varchar("subtype", { length: 40 }).notNull(),
+    balance: numeric("balance", { precision: 14, scale: 2 }).notNull(),
+    currency: varchar("currency", { length: 3 }).default("INR").notNull(),
+    notes: text("notes"),
+    archivedAt: timestamp("archived_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull()
+  },
+  (table) => ({
+    netWorthAccountsUserIndex: index("net_worth_accounts_user_idx").on(table.userId, table.updatedAt)
   })
 );
 

@@ -137,6 +137,33 @@ export type Goal = {
   updatedAt: string;
 };
 
+export type NetWorthAccountType = "asset" | "liability";
+
+export type NetWorthAccount = {
+  id: string;
+  name: string;
+  accountType: NetWorthAccountType;
+  subtype: string;
+  balance: number;
+  currency: string;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type NetWorthSummary = {
+  totalAssets: number;
+  totalLiabilities: number;
+  netWorth: number;
+  currency: string;
+  asOf: string;
+};
+
+export type NetWorthOverview = {
+  accounts: NetWorthAccount[];
+  summary: NetWorthSummary;
+};
+
 export type ReportSummary = {
   month: string;
   period: {

@@ -19,6 +19,7 @@ import { registerImportRoutes } from "./modules/imports/routes.js";
 import { registerMetricsRoutes } from "./modules/metrics/routes.js";
 import { registerProfileRoutes } from "./modules/profile/routes.js";
 import { registerFxRoutes } from "./modules/fx/routes.js";
+import { registerNetWorthRoutes } from "./modules/net-worth/routes.js";
 
 export const createApp = async (): Promise<FastifyInstance> => {
   const app = Fastify({
@@ -157,6 +158,7 @@ export const createApp = async (): Promise<FastifyInstance> => {
   await registerTransactionRoutes(app, ctx);
   await registerBudgetRoutes(app, ctx);
   await registerGoalRoutes(app, ctx);
+  await registerNetWorthRoutes(app, ctx);
   await registerReportRoutes(app, ctx);
   await registerFxRoutes(app, ctx);
   await registerProfileRoutes(app, ctx);

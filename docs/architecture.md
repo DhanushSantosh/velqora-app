@@ -36,6 +36,8 @@ Session token persisted with `expo-secure-store` (Keychain / Android Keystore ba
 | Add/Edit Budget | `modalRoute.kind = budgetForm` |
 | Goals | `activeTab = goals` |
 | Add/Edit Goal | `modalRoute.kind = goalForm` |
+| Net Worth | `modalRoute.kind = netWorth` |
+| Add/Edit Net Worth Account | `modalRoute.kind = netWorthForm` |
 | Settings | `activeTab = settings` |
 | Profile | `modalRoute.kind = profile` |
 | Category Studio | `modalRoute.kind = categoryManager` |
@@ -62,6 +64,7 @@ Redis-backed rate limiting with in-memory fallback.
 | `reports` | `/api/v1/reports/summary`, `/api/v1/reports/export` | Monthly aggregated summaries, CSV/PDF export |
 | `budgets` | `/api/v1/budgets` | Monthly per-category budget plans with live spend aggregation |
 | `goals` | `/api/v1/goals` | Savings goals with progress and completion state |
+| `net-worth` | `/api/v1/net-worth`, `/api/v1/net-worth/accounts` | Manually-tracked asset/liability accounts with an FX-converted net worth summary; no bank/UPI sync yet |
 | `profile` | `/api/v1/profile`, `/api/v1/profile/avatar` | User profile details, avatar upload/remove, and per-profile preference settings |
 | `consents` | `/api/v1/consents/*` | SMS import consent state and intent logging |
 | `imports` | `/api/v1/imports/sms/scan` | Explicit-trigger SMS field extraction with guardrails |
