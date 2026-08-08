@@ -67,6 +67,7 @@ Redis-backed rate limiting with in-memory fallback.
 | `imports` | `/api/v1/imports/sms/scan` | Explicit-trigger SMS field extraction with guardrails |
 | `audit` | (internal service) | Immutable audit event writes, called from other modules |
 | `metrics` | `/api/v1/metrics` | Prometheus-compatible scrape endpoint, disabled by default in production |
+| `fx` | `/api/v1/fx/latest` | Authenticated live exchange-rate snapshot (ECB-backed, Redis/in-memory cached) for display-currency conversion |
 | `alerts` | (internal service) | Webhook alerts for OTP delivery failures and unhandled 5xx errors |
 | `slo` | (internal service) | Rolling-window SLO evaluation and threshold-based alert routing |
 
@@ -85,9 +86,9 @@ Redis-backed rate limiting with in-memory fallback.
 
 When a transaction is created without an explicit `categoryId`:
 
-1. Deterministic keyword rules are applied against `counterparty` and `note` fields.
-2. Prior user corrections are inferred from transaction history — if a counterparty has been categorized consistently by the user before, the learned category is reused.
-3. If no rule or history match is found, the transaction remains uncategorized.
+1. Prior user corrections are checked first — if a counterparty has been categorized consistently by the user before (same direction), the learned category is reused.
+2. If no history match is found, deterministic keyword rules are applied against `counterparty` and `note` fields.
+3. If neither matches, the transaction remains uncategorized.
 
 Source: `apps/api/src/modules/transactions/auto-categorize.ts`
 

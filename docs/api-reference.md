@@ -43,6 +43,8 @@ Behavior:
 - If a keyed request is still processing, API returns:
   - `409 IDEMPOTENCY_IN_PROGRESS`
 
+Coverage: transactions, budgets, goals, categories (create/update/delete), SMS-import consent intent, profile patch, and avatar delete. Auth routes and avatar **upload** are not idempotency-key covered.
+
 ## Health and Bootstrap
 
 ### `GET /health`
@@ -138,6 +140,40 @@ Request body:
 ### `POST /api/v1/auth/recovery/verify-otp`
 
 Alias of OTP verification flow for recovery login.
+
+### `POST /api/v1/auth/oauth/google`
+
+Request body:
+
+```json
+{
+  "idToken": "google-id-token",
+  "nonce": "client-generated-nonce"
+}
+```
+
+Verifies the Google ID token, resolves/merges the user by `google_id`, and issues a session (same shape as OTP login).
+
+### `POST /api/v1/auth/oauth/apple`
+
+Native iOS Apple Sign-In flow.
+
+Request body:
+
+```json
+{
+  "identityToken": "apple-identity-token",
+  "rawNonce": "client-generated-nonce",
+  "audience": "app",
+  "user": { "firstName": "Dhanush", "lastName": "K", "email": "user@example.com" }
+}
+```
+
+`user` is only present on the first sign-in per Apple's own behavior. `audience` is `app` (native bundle ID) or `service` (Service ID, browser fallback).
+
+### `POST /api/v1/auth/oauth/apple/callback`
+
+Backend-mediated browser fallback for Apple Sign-In on Android / non-native contexts. Receives Apple's form-post callback, validates the redirect URI against an allowlist, and 303-redirects back into the app deep link with the identity token (or error) as query params for the client to complete the exchange.
 
 ### `POST /api/v1/auth/logout`
 
@@ -326,9 +362,9 @@ Request body:
 
 Auto-categorization behavior when `categoryId` is omitted:
 
-- Deterministic keyword rules are applied.
-- Prior user corrections are learned from transaction history (counterparty + direction).
-- If no rule matches, transaction remains uncategorized.
+- Prior user corrections are checked first, learned from transaction history (counterparty + direction).
+- If no history match, deterministic keyword rules are applied.
+- If neither matches, transaction remains uncategorized.
 
 ### `PATCH /api/v1/transactions/:id`
 
@@ -497,6 +533,18 @@ Guardrails:
 - Requires explicit user consent (`consentKey = sms_import`, `enabled = true`).
 - Extracts only minimal transaction fields.
 - Does not persist raw SMS content in database.
+
+## FX / Exchange Rates
+
+### `GET /api/v1/fx/latest?base=<CURRENCY>`
+
+Requires auth.
+
+Query parameters:
+
+- `base` (3-char ISO code, optional — defaults to app currency)
+
+Returns the current exchange-rate snapshot (ECB-backed daily feed, Redis/in-memory cached) with rates mapped from the requested base currency. Used by mobile to render ledger/budget/goal values converted into the profile's selected display currency.
 
 ## Metrics
 

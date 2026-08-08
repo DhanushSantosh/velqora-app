@@ -46,22 +46,35 @@ Audit events are captured for all security and mutation actions via `AuditServic
 
 | Event | Trigger |
 |---|---|
-| `auth.login` | Successful OTP verification |
+| `auth.otp_requested` | OTP requested (sign-in or recovery) |
+| `auth.otp_delivery_failed` | OTP delivery provider failed to send |
+| `auth.login` | Successful login — OTP verification or Google/Apple OAuth |
 | `auth.logout` | Session revocation |
 | `auth.account_delete_requested` | Account delete action |
-| `consent.intent` | SMS consent intent logged |
+| `consent.sms_import_intent` | SMS consent intent logged |
 | `transaction.create` | Transaction created |
 | `transaction.update` | Transaction updated |
 | `transaction.delete` | Transaction deleted |
 | `category.create` | Custom category created |
 | `category.update` | Custom category updated |
 | `category.delete` | Custom category deleted |
+| `budget.upsert` | Budget plan created/upserted |
+| `budget.update` | Budget plan updated |
+| `budget.delete` | Budget plan deleted |
+| `goal.create` | Savings goal created |
+| `goal.update` | Savings goal updated |
+| `goal.delete` | Savings goal deleted |
+| `profile.update` | Profile fields/settings patched |
+| `profile.avatar_upload` | Avatar uploaded |
+| `profile.avatar_remove` | Avatar removed |
+| `import.sms_scan_requested` | SMS scan endpoint invoked (feature-flagged) |
+| `fx.latest` | Exchange-rate snapshot fetched |
 
 Each audit log entry stores `request_id` and `ip_address` for full request traceability.
 
 ## Idempotent Mutation Guardrail
 
-- Authenticated mutation routes support `Idempotency-Key` to prevent duplicate writes during retries.
+- Transactions, budgets, goals, categories, SMS-import consent intent, profile patch, and avatar delete support `Idempotency-Key` to prevent duplicate writes during retries. Auth routes and avatar upload are not covered.
 - Idempotency records are scoped by user + method + route + key and expire automatically.
 - Reusing a key with a different payload is blocked with `409 IDEMPOTENCY_KEY_CONFLICT`.
 

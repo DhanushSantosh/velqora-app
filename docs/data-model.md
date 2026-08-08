@@ -15,6 +15,9 @@ ORM: Drizzle (`apps/api/src/db/schema.ts`)
 
 - `id` (uuid, pk)
 - `email` (unique)
+- `google_id` nullable (unique) — set on Google OAuth login
+- `apple_id` nullable (unique) — set on Apple OAuth login
+- `auth_provider` (`otp`, `google`, `apple`, `merged`) — default `otp`
 - timestamps
 
 ### `user_profiles`
@@ -120,6 +123,14 @@ Unique: `(user_id, consent_key)`
 - `action`, `entity_type`, `entity_id`
 - `metadata` (jsonb)
 - `request_id`, `ip_address`, `created_at`
+
+### `avatar_assets`
+
+- `user_id` (uuid, pk, fk -> `users.id`, one-to-one, `ON DELETE CASCADE`)
+- `avatar_key` (unique) — referenced by the API-served avatar URL, not a raw file path
+- `mime_type`
+- `content_base64` — image bytes stored in Postgres, not container-local filesystem
+- `created_at`, `updated_at`
 
 ### `idempotency_keys`
 
