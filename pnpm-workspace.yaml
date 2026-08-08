@@ -8,13 +8,26 @@ onlyBuiltDependencies:
   - esbuild
 
 overrides:
-  esbuild: '>=0.25.0'
+  esbuild: '>=0.28.1'
   node-forge: '>=1.4.0'
   picomatch: '>=4.0.4'
   'brace-expansion@<1.1.13': '1.1.13'
-  'brace-expansion@>=4.0.0 <5.0.5': '5.0.5'
-  'postcss@<8.5.10': '8.5.10'
+  'brace-expansion@>=4.0.0 <5.0.9': '5.0.9'
+  'postcss@<8.5.23': '8.5.23'
   'uuid@<14.0.0': '14.0.0'
   'yaml@>=2.0.0 <2.8.3': '2.8.3'
   '@xmldom/xmldom': '>=0.9.10'
-  'vite@>=7.0.0 <7.3.2': '7.3.2'
+  'vite@>=7.0.0 <7.3.5': '7.3.5'
+  fast-uri: '>=3.1.5'
+  find-my-way: '>=9.7.0'
+  ws: '>=8.21.0'
+  js-yaml: '>=4.3.1'
+  shell-quote: '>=1.9.0'
+  '@opentelemetry/core': '>=2.8.0'
+  '@babel/core': '>=7.29.6'
+  'vitest@<3.2.6': '3.2.6'
+  nanoid: '>=3.3.17'
+  # image-size <=2.0.2 (nested under expo>@expo/metro>metro) has no patched
+  # release yet upstream (GHSA-w3rx-r6r6-pgpr, GHSA-5p2g-fcmc-qvqq). Build-time
+  # asset parser only, not reachable by untrusted network input -- monitor for
+  # an upstream fix rather than pinning to a version that doesn't exist.
