@@ -1,0 +1,38 @@
+name: Dependabot Auto-Merge
+
+# Auto-merges Dependabot PRs, but only for the github-actions ecosystem --
+# CI workflow version bumps (e.g. actions/checkout@v4 -> v5). These don't
+# touch application code or the dependency tree, so once required checks
+# pass there's nothing meaningful for a human to review.
+#
+# npm/pnpm dependency PRs (apps/api, apps/mobile, root) are deliberately
+# excluded -- those still need review per this repo's "Only Claude commits"
+# convention, and land as normal PRs from .github/dependabot.yml.
+
+on:
+  pull_request_target:
+    branches: [main]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  auto-merge:
+    if: github.actor == 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch Dependabot metadata
+        id: metadata
+        uses: dependabot/fetch-metadata@v2
+        with:
+          github-token: "${{ secrets.GITHUB_TOKEN }}"
+
+      - name: Approve and enable auto-merge (github-actions ecosystem only)
+        if: steps.metadata.outputs.package-ecosystem == 'github_actions'
+        run: |
+          gh pr review "$PR_URL" --approve -b "Auto-approved: github-actions ecosystem update, CI-gated."
+          gh pr merge --auto --squash "$PR_URL"
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

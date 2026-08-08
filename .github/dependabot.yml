@@ -1,0 +1,49 @@
+version: 2
+
+updates:
+  # pnpm workspace (root + apps/api + apps/mobile) -- single entry covers the
+  # whole workspace since it's driven by the root pnpm-lock.yaml.
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+    commit-message:
+      prefix: "chore(deps)"
+      prefix-development: "chore(deps-dev)"
+    groups:
+      production-dependencies:
+        dependency-type: "production"
+        update-types:
+          - "minor"
+          - "patch"
+      development-dependencies:
+        dependency-type: "development"
+        update-types:
+          - "minor"
+          - "patch"
+    # Major version bumps land as individual, ungrouped PRs rather than being
+    # silently pulled into a grouped update -- deliberate review needed
+    # (an unbounded transitive floor already caused one unplanned major bump
+    # and a broken peer dependency during manual patching this session).
+    ignore:
+      - dependency-name: "*"
+        update-types:
+          - "version-update:semver-major"
+
+  # CI workflow action versions -- kept separate since these are safe to
+  # auto-merge (see .github/workflows/dependabot-auto-merge.yml) and don't
+  # touch application code or the dependency tree.
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    labels:
+      - "dependencies"
+      - "ci"
+    commit-message:
+      prefix: "chore(ci)"
