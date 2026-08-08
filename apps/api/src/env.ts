@@ -83,9 +83,9 @@ const envSchema = z
     SMS_DISCLOSURE_VERSION: z.string().default("sms_disclosure_v1"),
     APP_CURRENCY: z.string().length(3).default("INR"),
     GOOGLE_OAUTH_ENABLED: booleanFromEnv.default(false),
-    GOOGLE_CLIENT_ID: z.string().min(1).optional(),
-    APPLE_APP_BUNDLE_ID: z.string().min(1).optional(),
-    APPLE_SERVICE_ID: z.string().min(1).optional()
+    GOOGLE_CLIENT_ID: optionalStringFromEnv,
+    APPLE_APP_BUNDLE_ID: optionalStringFromEnv,
+    APPLE_SERVICE_ID: optionalStringFromEnv
   })
   .superRefine((value, refinementContext) => {
     if (value.OTP_PROVIDER === "resend" && !value.RESEND_API_KEY) {
